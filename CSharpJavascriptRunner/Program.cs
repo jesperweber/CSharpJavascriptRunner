@@ -1,54 +1,7 @@
 ﻿using JavaScriptEngineSwitcher.Core;
 using JavaScriptEngineSwitcher.Jurassic;
 using JavaScriptEngineSwitcher.V8;
-
-// Source entity
-const string sourceEntity = @"
-{
-    ""url"": ""https://localhost/"",
-    ""properties"": {
-        ""nullString"": null,
-        ""string"": ""value1"",
-        ""number"": 1.5,
-        ""boolean"": true
-    }
-}";
-
-// Schema
-const string schema = @"
-    Schema = class {
-        triggers() {
-            return {
-                ""umbraco"": [""home""]
-            }
-        }
-
-        route(sourceEntity) {
-            return {
-                ""url"": sourceEntity.url
-            }
-        }
-
-        properties(sourceEntity) {
-    
-            let stringValue= null;
-            if(sourceEntity.properties.nullString){
-                stringValue = sourceEntity.properties.nullString
-            }
-            else {
-                stringValue = sourceEntity.properties.string
-            }
-
-            return {
-                ""string"": stringValue,
-                ""string1"": sourceEntity.properties.string,
-                ""number1"": sourceEntity.properties.number,
-                ""boolean1"": sourceEntity.properties.boolean,
-                ""test"": ""hej med dig: "" + sourceEntity.properties.string
-            };
-        }
-    }
-";
+using Newtonsoft.Json;
 
 // Setup JsEngineSwitcher
 var engineSwitcher = JsEngineSwitcher.Current;
@@ -58,20 +11,25 @@ engineSwitcher.EngineFactories
 
 var engine = JsEngineSwitcher.Current.CreateEngine(JurassicJsEngine.EngineName);
 
-// Run js schema
-engine.SetVariableValue("sourceEntity", sourceEntity);
+// Included js resources
+engine.ExecuteResource("CSharpJavascriptRunner.schema.js", typeof(Program).Assembly);
+engine.ExecuteResource("CSharpJavascriptRunner.sourceEntity.js", typeof(Program).Assembly);
 
-engine.Execute(schema);
+// Run js schema
 engine.Execute($"schema = new Schema()");
 engine.Execute($"triggers = schema.triggers()");
-engine.Execute($"route = schema.route(JSON.parse(sourceEntity))");
-engine.Execute($"view = schema.properties(JSON.parse(sourceEntity))");
+engine.Execute($"route = schema.route(sourceEntity)");
+engine.Execute($"view = schema.properties(sourceEntity)");
 
 // Generated triggers, route and view
 var triggers = engine.Evaluate<string>("JSON.stringify(triggers)");
 var route = engine.Evaluate<string>("JSON.stringify(route)");
 var view = engine.Evaluate<string>("JSON.stringify(view)");
 
-Console.WriteLine(triggers);
-Console.WriteLine(route);
-Console.WriteLine(view);
+File.WriteAllLinesAsync(Directory.GetCurrentDirectory() + "\\..\\..\\..\\view.json", new []{ JsonConvert.SerializeObject(JsonConvert.DeserializeObject(view), Formatting.Indented) });
+
+Console.WriteLine(JsonConvert.SerializeObject(JsonConvert.DeserializeObject(triggers), Formatting.Indented));
+Console.WriteLine(JsonConvert.SerializeObject(JsonConvert.DeserializeObject(route), Formatting.Indented));
+Console.WriteLine(JsonConvert.SerializeObject(JsonConvert.DeserializeObject(view), Formatting.Indented));
+
+Console.ReadLine();

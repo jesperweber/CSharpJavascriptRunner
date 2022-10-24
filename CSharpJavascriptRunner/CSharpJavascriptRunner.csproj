@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="schema.js" />
+    <None Remove="sourceEntity.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="sourceEntity.js" />
+    <EmbeddedResource Include="schema.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="JavaScriptEngineSwitcher.Jurassic" Version="3.20.5" />
     <PackageReference Include="JavaScriptEngineSwitcher.V8" Version="3.20.4" />
   </ItemGroup>
